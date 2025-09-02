@@ -1,7 +1,6 @@
 import pygame
 import os
 import random
-import time
 
 TELA_LARGURA = 500
 TELA_ALTURA  = 800
@@ -37,7 +36,7 @@ class Passaro:
         self.imagem = self.IMGS[0]
 
     def pular(self):
-        self.velocidade = -10  # Ajuste se quiser um pulo mais suave ou mais forte
+        self.velocidade = -15  # Ajuste se quiser um pulo mais suave ou mais forte
         self.tempo = 0
 
     def mover(self):
@@ -53,12 +52,12 @@ class Passaro:
 
         self.y += deslocamento
 
-        # ângulo do pássaro
+        #Ângulo do pássaro
         if deslocamento < 0:
             if self.angulo < self.ROTACAO_MAXIMA:
                 self.angulo = self.ROTACAO_MAXIMA
         else:
-            if self.angulo > -90:
+            if self.angulo > -45:
                 self.angulo -= self.VELOCIDADE_ROTACAO
 
 
@@ -158,6 +157,36 @@ class Chao:
         tela.blit(self.IMAGEM, (self.x1, self.y))
         tela.blit(self.IMAGEM, (self.x2, self.y))
 
+def gameOver(tela):
+    fonte = pygame.font.Font("fonts/DeliusSwashCaps-Regular.ttf", 55)
+    texto_game_over = fonte.render("Fim de Jogo", True, (255,0,0))
+    texto_retry = FONTE_PONTOS.render("Recomeçar", True, (255,255,255))
+
+    #Botão retry
+    botao_largura = 200
+    botao_altura = 60
+    botao_x = (TELA_LARGURA - botao_largura) // 2
+    botao_y = (TELA_ALTURA - botao_altura) // 2 + 50
+    botao_rect = pygame.Rect(botao_x, botao_y, botao_largura, botao_altura)
+
+    while True:
+        tela.blit(IMAGEM_BACKGROUND, (0,0))
+        tela.blit(texto_game_over, ((TELA_LARGURA - texto_game_over.get_width())//2, 200))
+        pygame.draw.rect(tela, (0,100,200), botao_rect)
+        tela.blit(texto_retry, (
+        botao_x + (botao_largura - texto_retry.get_width()) // 2,
+        botao_y + (botao_altura - texto_retry.get_height()) // 2
+        ))
+        pygame.display.update()
+
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if evento.type == pygame.MOUSEBUTTONDOWN:
+                if botao_rect.collidepoint(evento.pos):
+                    return True
+
 #Funções do sistema
 def desenhar_tela(tela, passaros, canos, chao, pontos):
     #Desenhando o fundo do jogo
@@ -210,10 +239,11 @@ def main():
         for cano in canos:
             for i, passaro in enumerate(passaros):
                 if cano.colidir(passaro):
-                    passaros.pop(i)
-                    if len(passaros) == 0:
-                        time.sleep(0.5)
-                        rodando = False
+                    if gameOver(tela):
+                        main()
+                    else:
+                        pygame.quit()
+                        quit()
                 if not cano.passou and passaro.x > cano.x:
                     cano.passou = True
                     adicionar_cano = True
@@ -230,7 +260,11 @@ def main():
 
         for i, passaro in enumerate(passaros):
             if (passaro.y + passaro.imagem.get_height()) > chao.y or passaro.y < 0:
-                passaros.pop(i)
+                if gameOver(tela):
+                    main()
+                else:
+                    pygame.quit()
+                    quit()
 
         desenhar_tela(tela, passaros, canos, chao, pontos)
 
