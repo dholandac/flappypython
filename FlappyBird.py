@@ -7,11 +7,10 @@ TELA_ALTURA  = 800
 
 IMAGEM_CANO = pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "pipe.png")))
 IMAGEM_CHAO = pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "base.png")))
-IMAGEM_BACKGROUND = pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "bg.png")))
+IMAGEM_BACKGROUND = pygame.transform.scale_by(pygame.image.load(os.path.join("imgs", "bg.png")),1.8)
 IMAGEM_PASSARO = [pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "bird1.png"))),
                   pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "bird2.png"))),
                   pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "bird3.png")))]
-
 pygame.font.init()
 pygame.mixer.init()
 FONTE_PONTOS = pygame.font.Font("fonts/DeliusSwashCaps-Regular.ttf", 30)
@@ -36,12 +35,12 @@ class Passaro:
         self.imagem = self.IMGS[0]
 
     def pular(self):
-        self.velocidade = -15  # Ajuste se quiser um pulo mais suave ou mais forte
+        self.velocidade = -15
         self.tempo = 0
 
     def mover(self):
         self.tempo += 1
-        gravidade = 1  # Pode ajustar entre 0.5 e 1.5 para suavidade
+        gravidade = 1
         self.velocidade += gravidade
         deslocamento = self.velocidade
 
@@ -159,7 +158,7 @@ class Chao:
 
 def gameOver(tela):
     fonte = pygame.font.Font("fonts/DeliusSwashCaps-Regular.ttf", 55)
-    texto_game_over = fonte.render("Fim de Jogo", True, (255,0,0))
+    texto_game_over = fonte.render("Fim de Jogo", True, (0,0,0))
     texto_retry = FONTE_PONTOS.render("Recomeçar", True, (255,255,255))
 
     #Botão retry
@@ -171,7 +170,7 @@ def gameOver(tela):
 
     while True:
         tela.blit(IMAGEM_BACKGROUND, (0,0))
-        tela.blit(texto_game_over, ((TELA_LARGURA - texto_game_over.get_width())//2, 200))
+        tela.blit(texto_game_over, ((TELA_LARGURA - texto_game_over.get_width())//2, 270))
         pygame.draw.rect(tela, (0,100,200), botao_rect)
         tela.blit(texto_retry, (
         botao_x + (botao_largura - texto_retry.get_width()) // 2,
@@ -185,6 +184,9 @@ def gameOver(tela):
                 quit()
             if evento.type == pygame.MOUSEBUTTONDOWN:
                 if botao_rect.collidepoint(evento.pos):
+                    return True
+            if evento.type == pygame.KEYDOWN:
+                if evento.key == pygame.K_SPACE:
                     return True
 
 #Funções do sistema
