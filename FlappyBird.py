@@ -5,7 +5,7 @@ import random
 TELA_LARGURA = 500
 TELA_ALTURA  = 800
 
-IMAGEM_CANO = pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "pipe.png")))
+IMAGEM_CANO = pygame.image.load(os.path.join("imgs", "pipe.png"))
 IMAGEM_CHAO = pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "base.png")))
 IMAGEM_BACKGROUND = pygame.transform.scale_by(pygame.image.load(os.path.join("imgs", "bg.png")),1.8)
 IMAGEM_PASSARO = [pygame.transform.scale2x(pygame.image.load(os.path.join("imgs", "bird1.png"))),
@@ -14,8 +14,12 @@ IMAGEM_PASSARO = [pygame.transform.scale2x(pygame.image.load(os.path.join("imgs"
 pygame.font.init()
 pygame.mixer.init()
 FONTE_PONTOS = pygame.font.Font("fonts/DeliusSwashCaps-Regular.ttf", 30)
-SOM_PULAR = pygame.mixer.Sound("sounds/flap.mp3")
-SOM_MORTE = pygame.mixer.Sound("sounds/boom.mp3")
+
+#Função para tocar música
+def tocar_musica(arquivo, loop=True):
+    pygame.mixer.stop()
+    pygame.mixer.music.load(arquivo)
+    pygame.mixer.music.play(-1 if loop else 0)
 
 class Passaro:
     IMGS = IMAGEM_PASSARO
@@ -128,7 +132,7 @@ class Cano:
         base_ponto = passaro_mask.overlap(base_mask, distancia_base)
 
         if base_ponto or topo_ponto:
-            SOM_MORTE.play()
+            tocar_musica(os.path.join("sounds", "boom.mp3"), loop=False)
             return True
         else:
             return False
@@ -156,10 +160,13 @@ class Chao:
         tela.blit(self.IMAGEM, (self.x1, self.y))
         tela.blit(self.IMAGEM, (self.x2, self.y))
 
-def gameOver(tela):
+def gameOver(tela,pontos):
+    tocar_musica(os.path.join("sounds", "gameover.ogg"), loop=False)
+
     fonte = pygame.font.Font("fonts/DeliusSwashCaps-Regular.ttf", 55)
     texto_game_over = fonte.render("Fim de Jogo", True, (0,0,0))
     texto_retry = FONTE_PONTOS.render("Recomeçar", True, (255,255,255))
+    texto_pontos = FONTE_PONTOS.render(f"Pontuação Final: {pontos}", True, (99,43,196))
 
     #Botão retry
     botao_largura = 200
@@ -171,6 +178,7 @@ def gameOver(tela):
     while True:
         tela.blit(IMAGEM_BACKGROUND, (0,0))
         tela.blit(texto_game_over, ((TELA_LARGURA - texto_game_over.get_width())//2, 270))
+        tela.blit(texto_pontos, ((TELA_LARGURA - texto_game_over.get_width())//2 + 27, 340))
         pygame.draw.rect(tela, (0,100,200), botao_rect)
         tela.blit(texto_retry, (
         botao_x + (botao_largura - texto_retry.get_width()) // 2,
@@ -209,6 +217,8 @@ def desenhar_tela(tela, passaros, canos, chao, pontos):
     pygame.display.update()
 
 def main():
+    tocar_musica(os.path.join("sounds", "overflow.ogg"), loop=True)
+
     passaros = [Passaro(230,350)]
     chao = Chao(730)
     canos = [Cano(700)]
@@ -230,7 +240,7 @@ def main():
                 if evento.key == pygame.K_SPACE or evento.key == pygame.K_UP:
                     for passaro in passaros:
                         passaro.pular()
-                    SOM_PULAR.play()
+                    tocar_musica(os.path.join("sounds", "flap.mp3"), loop=False)
         #Mover coisas
         for passaro in passaros:
             passaro.mover()
@@ -241,7 +251,7 @@ def main():
         for cano in canos:
             for i, passaro in enumerate(passaros):
                 if cano.colidir(passaro):
-                    if gameOver(tela):
+                    if gameOver(tela,pontos):
                         main()
                     else:
                         pygame.quit()
@@ -262,7 +272,7 @@ def main():
 
         for i, passaro in enumerate(passaros):
             if (passaro.y + passaro.imagem.get_height()) > chao.y or passaro.y < 0:
-                if gameOver(tela):
+                if gameOver(tela,pontos):
                     main()
                 else:
                     pygame.quit()
